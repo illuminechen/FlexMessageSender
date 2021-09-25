@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>ShareTargetPickerAgent</title>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+	<b>Flex Message 小信差</b>
+	<br>
+	<div>
+		<label>預覽文字：</label>
+		<input id="alt" type="text" placeholder="Flex Message"/>
+	</div>
+	<div>
+		<label>主體訊息：</label>
+	</div>
+	<div>
+		<textarea id="message" cols="40" rows="5" placeholder="請貼上JSON格式"></textarea>
+	</div>
+
+	<button id ="share">分享</button>
+	<div id="result" style="color:red"></div>
+	<script src="https://static.line-scdn.net/liff/edge/2.1/sdk.js"></script>
+	<script>
+		let result = document.getElementById('result');
+		let altText = document.getElementById('alt');
+		let message = document.getElementById('message');
+
+		liff.init({liffId: "1656461310-OrDWQoZv"})
+		.then(() => {
+			if (liff.isLoggedIn()) {
+				
+			} else {
+				liff.login();
+			}
+		})
+		.catch(error => {
+		});
+		
+						
+		document.getElementById('share').addEventListener('click',function(){
+			result.innerHTML="";
+			if(altText.value =="")
+			{
+				result.innerHTML = "請輸入替代文字";
+				return;
+			}
+			let msg = "";
+			try
+			{
+				msg = getMessage();
+			}
+			catch(ex)
+			{
+				result.innerHTML = "訊息格式不正確:"+JSON.stringify(ex);
+			}
+			if (liff.isApiAvailable('shareTargetPicker')) {
+				if(msg != "")
+				{
+					liff.shareTargetPicker([msg])
+					.then(()=>
+					{
+						result.innerHTML = "傳送成功";
+					}).catch((res)=>{
+						result.innerHTML = "傳送尚未成功:"+JSON.stringify(res);
+					});
+				}							
+			}
+		});			
+		
+		const getMessage = ()=>{
+			return {			
+			  "type": "flex",
+			  "altText": altText.value,
+			  "contents": JSON.parse(message.value)
+			};
+		}
+
+		
+	</script>
+</body>
+
+</html>
