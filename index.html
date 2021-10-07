@@ -106,7 +106,7 @@
 		}
 
 		copyBtn.addEventListener('click',function(){
-			setClipboard('https://illuminechen.github.io/FlexMessageSender/?id='+idText.value+'&edit=1&openExternalBrowser=1');
+			setClipboard('https://illuminechen.github.io/FlexMessageSender/?id='+idText.value+'&edit=1');
 		});
 
 		message.addEventListener('change',function(){
@@ -189,7 +189,7 @@
 					"action": {
 					  "type": "uri",
 					  "label": "action",
-					  "uri": 'https://illuminechen.github.io/FlexMessageSender/?id='+idText.value
+					  "uri": 'https://illuminechen.github.io/FlexMessageSender/?id='+idText.value+"&openExternalBrowser=1"
 					},
 					"justifyContent": "center"
 				};
