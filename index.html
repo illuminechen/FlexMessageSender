@@ -62,7 +62,7 @@
 				{			
 					panel.style.display='none';
 					let res = await fetchAsync({method:"Load",id:uid});
-					res = JSON.parse(res);
+					res = await res.json();
 					console.log(res);
 					defaultmsg = JSON.parse(res.pat);
 					if (liff.isApiAvailable('shareTargetPicker')) {
