@@ -58,9 +58,11 @@
 				const params = urlParams.has('liff.state')? new URLSearchParams(urlParams.get('liff.state')) : urlParams;
 				const uid = params.get('id');
 				const edit = params.get('edit');
-					
+				console.log(uid);
+				console.log(edit);
 				if(uid != null && (edit==null || !edit))
 				{			
+					console.log('hi');
 					panel.css.display='none';
 					let res = JSON.parse(await fetchAsync({method:"Load",id:uid}));
 					defaultmsg = JSON.parse(res.pat);
