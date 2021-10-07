@@ -60,7 +60,7 @@
 				const edit = params.get('edit');
 				if(uid != null && (edit==null || !edit))
 				{			
-					panel.css.display='none';
+					panel.style.display='none';
 					let res = await fetchAsync({method:"Load",id:uid});
 					res = JSON.parse(res);
 					console.log(res);
