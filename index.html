@@ -185,7 +185,7 @@
 				
 				if(msg.footer == null)
 				{
-					msg.footer.push({type:'box',layout:'vertical',contents:[]});
+					msg.footer = {type:'box',layout:'vertical',contents:[]};
 				}
 				
 				if(msg.footer.layout == 'vertical')
