@@ -9,6 +9,18 @@
 <body>
 	<b>Flex Message 小信差</b>
 	<br>
+	<div id="panel">
+	<div>
+		<label>公開</label>
+		<input id="publish" type="checkbox"/>
+		<input id="id" type="text" readonly disabled/>
+		<button id='copybtn'>copy</button>
+	</div>
+	<div>
+		<label>增加分享按鈕</label>
+		<input id="useShareBtn" type="checkbox" disabled/>
+	</div>
+
 	<div>
 		<label>預覽文字：</label>
 		<input id="alt" type="text" placeholder="Flex Message"/>
@@ -19,38 +31,115 @@
 	<div>
 		<textarea id="message" cols="40" rows="5" placeholder="請貼上JSON格式"></textarea>
 	</div>
-
+	</div
 	<button id ="share">分享</button>
 	<div id="result" style="color:red"></div>
 	<script src="https://static.line-scdn.net/liff/edge/2.1/sdk.js"></script>
 	<script>
-		let result = document.getElementById('result');
-		let altText = document.getElementById('alt');
-		let message = document.getElementById('message');
-
+		let shared=false;
+		const result = document.getElementById('result');
+		const panel = document.getElementById('panel');
+		const altText = document.getElementById('alt');
+		const message = document.getElementById('message');
+		const publish = document.getElementById('publish');
+		const useShareBtn = document.getElementById('useShareBtn');
+		const copyBtn = document.getElementById('copybtn');
+		const shareBtn = document.getElementById('share');		
+		let defaultId = makeid();
+		const idText = document.getElementById('id');
+		id.value=defaultId;
+		
+		let defaultmsg;
 		liff.init({liffId: "1656461310-OrDWQoZv"})
-		.then(() => {
+		.then(async () => {
 			if (liff.isLoggedIn()) {
-				
+			
+				let urlParams = new URLSearchParams(window.location.search);
+				const params = urlParams.has('liff.state')? new URLSearchParams(urlParams.get('liff.state')) : urlParams;
+				const uid = params.get('id');
+				const edit = params.get('edit');
+					
+				if(uid != null && (edit==null || !edit))
+				{			
+					panel.css.display='none';
+					let res = JSON.parse(await fetchAsync({method:"Load",id:uid}));
+					defaultmsg = JSON.parse(res.pat);
+					if (liff.isApiAvailable('shareTargetPicker')) {
+						liff.shareTargetPicker([defaultmsg])
+						.then(()=>
+						{
+							result.innerHTML = "傳送成功";
+							shared = true;
+						}).catch((res)=>{
+							result.innerHTML = "傳送尚未成功:"+JSON.stringify(res);
+						});
+					}
+				}
 			} else {
-				liff.login();
+				liff.login({redirectUri:window.location.href});
 			}
 		})
 		.catch(error => {
 		});
 		
-						
-		document.getElementById('share').addEventListener('click',function(){
+		function setClipboard(value) {
+			let tempInput = document.createElement("input");
+			tempInput.style = "position: absolute; left: -1000px; top: -1000px";
+			tempInput.value = value;
+			document.body.appendChild(tempInput);
+			tempInput.select();
+			document.execCommand("copy");
+			document.body.removeChild(tempInput);
+		}
+
+		copyBtn.addEventListener('click',function(){
+			setClipboard('https://illuminechen.github.io/FlexMessageSender/?id'+idText.value+'&edit=1');
+		});		
+
+		message.addEventListener('change',function(){
+			if(shared)
+			{
+				defaultId = makeid();
+				id.value=defaultId;
+				shared = false;
+			}
+		});
+		
+		publish.addEventListener('change',function(){
+			useShareBtn.disabled = !publish.checked;
+			id.disabled = !publish.checked;
+			if(!publish.checked)
+				useShareBtn.checked=false;
+		});
+		
+		shareBtn.addEventListener('click',function(){
+			if(defaultmsg)
+			{
+				liff.shareTargetPicker([defaultmsg])
+				.then(()=>
+				{
+					result.innerHTML = "傳送成功";
+					shared = true;
+				}).catch((res)=>{
+					result.innerHTML = "傳送尚未成功:"+JSON.stringify(res);
+				});
+				return;
+			}
+		
 			result.innerHTML="";
 			if(altText.value =="")
 			{
 				result.innerHTML = "請輸入替代文字";
 				return;
-			}
+			}			
 			let msg = "";
 			try
 			{
 				msg = getMessage();
+				if(publish)
+				{
+					fetchAsync({method:"Save",desc:altText.value,pat:JSON.stringify(msg)});
+				}
 			}
 			catch(ex)
 			{
@@ -63,6 +152,7 @@
 					.then(()=>
 					{
 						result.innerHTML = "傳送成功";
+						shared = true;
 					}).catch((res)=>{
 						result.innerHTML = "傳送尚未成功:"+JSON.stringify(res);
 					});
@@ -71,14 +161,75 @@
 		});			
 		
 		const getMessage = ()=>{
-			return {			
+			let msg = JSON.parse(message.value);
+			if(useShareBtn.checked)
+			{
+				let share_btn = {
+					"type": "box",
+					"layout": "baseline",
+					"contents": [
+					{
+						"type": "icon",
+						"url": "https://cdn-icons-png.flaticon.com/512/1828/1828954.png",
+						"size": "xxl"
+					}],
+					"action": {
+					  "type": "uri",
+					  "label": "action",
+					  "uri": 'https://illuminechen.github.io/FlexMessageSender/?id'+idText.value
+					},
+					"justifyContent": "center"
+				};
+				
+				if(msg.footer == null)
+				{
+					msg.footer.push({type:'box',layout:'vertical',contents:[]});
+				}
+				
+				if(msg.footer.layout == 'vertical')
+				{
+					msg.footer.contents.push(share_btn);
+				}			
+				else 
+				{
+					let temp = footer;
+					msg.footer = {type:'box',layout:'vertical',contents:[]};
+					msg.footer.contents.push(temp);
+					msg.footer.contents.push(share_btn);
+				}
+			}
+			
+			return {
 			  "type": "flex",
 			  "altText": altText.value,
-			  "contents": JSON.parse(message.value)
+			  "contents": msg
 			};
 		}
-
+				
 		
+		function makeid() {
+		  var text = "";
+		  var possible = "ABCDEFGHIJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";//filtered
+
+		  for (var i = 0; i < 5; i++)
+			text += possible.charAt(Math.floor(Math.random() * possible.length));
+
+		  return text;
+		}
+		
+		function fetchAsync(payload) {
+		  let url = 'https://script.google.com/macros/s/AKfycbz-ocQHK-6QNbBP_fDnnYp6L23EV2UZ-GVRH9vi3qlP8f4epBU5bZ7xVlFh4ygA2Q9m/exec';
+		  return fetch(url, {
+			headers: {
+			  'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',            
+			}, 
+			method: "POST", 
+			body: JSON.stringify(payload)
+		  });
+		}
+		
+		
+
 	</script>
 </body>
 
