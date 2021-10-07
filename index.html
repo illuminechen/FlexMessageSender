@@ -86,7 +86,7 @@
 					defaultId=uid;
 					idText.value=uid;
 					altText.value = msg.altText;
-					message.value = JSON.stringify(msg.contents[0]);
+					message.value = JSON.stringify(msg.contents[0] || msg.contents);
 				}
 			} else {
 				liff.login({redirectUri:window.location.href});
